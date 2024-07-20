@@ -1,27 +1,39 @@
-const WebSocket = require('ws');
+const express = require('express');
+const cors = require('cors');
+const os = require('os');
+const app = express();
+const PORT = 61000;
 
-const server = new WebSocket.Server({ port: 61000 });
+// Function to get the local IP address
+const getLocalIpAddress = () => {
+    const interfaces = os.networkInterfaces();
+    for (const iface of Object.values(interfaces)) {
+        for (const alias of iface) {
+            if (alias.family === 'IPv4' && !alias.internal) {
+                return alias.address;
+            }
+        }
+    }
+    return '127.0.0.1'; // Fallback to localhost if no external address is found
+};
 
-server.on('connection', (ws) => {
-    ws.on('message', (message) => {
-        console.log(`Received: ${message}`);
+const LOCAL_IP = getLocalIpAddress();
 
-        setTimeout(() => {
-            const readyServer = new WebSocket('ws://localhost:61001');
-            readyServer.on('open', () => {
-                readyServer.send('ready');
-            });
-        }, 2000);
-    });
+app.use(cors());
+
+app.use(express.json());
+
+
+app.post('/send', (req, res) => {
+    console.log('Received layout:', req.body.layout);
+    console.log('Received cameras:', req.body.selectedCameras);
+
+    // Simulate some processing time
+    setTimeout(() => {
+        res.json({ status: 'ready' });
+    }, 2000); // Simulates a delay of 2 seconds
 });
 
-const readyServer = new WebSocket.Server({ port: 61001 });
-
-readyServer.on('connection', (ws) => {
-    ws.on('message', (message) => {
-        console.log(`Received: ${message}`);
-        ws.send('ack');
-    });
+app.listen(PORT, LOCAL_IP, () => {
+    console.log(`Server running at http://${LOCAL_IP}:${PORT}`);
 });
-
-console.log('WebSocket server is running on ws://localhost:61000 and ws://localhost:61001');

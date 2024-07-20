@@ -6,8 +6,8 @@
     justify-content: center;
     align-items: center;
     height: 110px;
-    background-color: #522c2c;
-    border-radius: 50px;
+    background-color: #22326e;
+    border-radius: 40px;
     width:800px;
 
     font-size: 1.5rem;
@@ -22,12 +22,12 @@
     margin-right: auto;
 }
 .fot-type{
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Times New Roman', sans-serif;
 }
 
 .container{
-    background-color: rgba(82, 44, 44, 0.24);
-    color: #522c2c;
+    background-color: rgba(40, 38, 38, 0.24);
+    color: #1f2023;
     height: 110vh;
 
 
@@ -85,7 +85,7 @@
 }
 
 .camera-option {
-    color: rgba(0, 0, 0, 0.49);
+    color: black;
     width: 110px;
     height: 80px;
     border: 0px solid #ccc;
@@ -100,7 +100,7 @@
 }
 
 .camera-option.selected {
-    background-color: #522c2c;
+    background-color: rgba(197, 7, 7, 0.82);
     color: white;
 }
 .camera-options-container {
@@ -114,6 +114,10 @@
 .send-button:disabled {
     opacity: 0.5; /* Adjust the opacity to make the button appear transparent when disabled */
     cursor: not-allowed; /* Change cursor style to indicate the button is not clickable */
+}
+.clear-button:disabled{
+    opacity: 0.5; /* Adjust the opacity to make the button appear transparent when disabled */
+    cursor: not-allowed;
 }
 
 .send-button, .clear-button {
@@ -130,22 +134,46 @@
 
 .send-button {
 
-    background-color: #4CAF50;
+    background-color: #22326e;
 
     color: white;
     border: none;
 }
 
 .send-button:hover {
-    background-color: #45a049;
+    background-color: #1d2b5e;
 }
 
 .clear-button {
-    background-color: #f44336;
+    background-color: #c50707;
     color: white;
     border: none;
 }
 
 .clear-button:hover {
-    background-color: #da190b;
+    background-color: #b20505;
 }
+.modal {
+    font-family: 'Times New Roman', sans-serif;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 4px;
+    outline: none;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
