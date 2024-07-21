@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import Modal from 'react-modal';
 
 const App = () => {
     const [layout, setLayout] = useState('');
     const [selectedCameras, setSelectedCameras] = useState([]);
     const [buttonsDisabled, setButtonsDisabled] = useState(false);
-    const [modalIsOpen, setModalIsOpen] = useState(false);
 
     const cameraOptions = Array.from({ length: 20 }, (_, i) => `Camera ${i + 1}`);
 
     useEffect(() => {
         if (layout) {
-            setModalIsOpen(true);
+            alert(`You can choose at most ${getMaxSelections()} camera(s) for the ${layout} layout.`);
         }
     }, [layout]);
 
@@ -23,13 +21,14 @@ const App = () => {
     };
 
     const handleCameraClick = (camera) => {
+        const cameraNumber = parseInt(camera.split(' ')[1]);
         const maxSelections = layout === '1x1' ? 1 : layout === '2x2' ? 4 : 16;
-        const isSelected = selectedCameras.includes(camera);
+        const isSelected = selectedCameras.includes(cameraNumber);
 
         if (isSelected) {
-            setSelectedCameras(selectedCameras.filter(c => c !== camera));
+            setSelectedCameras(selectedCameras.filter(c => c !== cameraNumber));
         } else if (selectedCameras.length < maxSelections) {
-            setSelectedCameras([...selectedCameras, camera]);
+            setSelectedCameras([...selectedCameras, cameraNumber]);
         }
     };
 
@@ -38,40 +37,39 @@ const App = () => {
     };
 
     const handleSend = async () => {
-        setButtonsDisabled(true);
 
-        // Placeholder for sending functionality
-        console.log("Sending selected cameras and layout:", { selectedCameras, layout });
+        console.log('Sending data...'); // Add this line for debugging
+        const layoutNumber = layout === '1x1' ? 1 : layout === '2x2' ? 4 : 16;
+        const data = [layoutNumber, ...selectedCameras].join(',') + '\n'; // Append newline character
 
         try {
-            const response = await fetch(`http://192.168.1.100:61000/send`, {
+            const response = await fetch('http://192.168.1.100:61000/send', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'text/plain',
                 },
-                body: JSON.stringify({ layout, selectedCameras }),
+                body: data,
             });
 
-            const result = await response.json();
-            if (result.status === 'ready') {
-                setButtonsDisabled(false);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
         } catch (error) {
-            console.error('Error:', error);
-            setButtonsDisabled(false); // Re-enable buttons in case of error
+            console.error('Fetch error:', error);
+        } finally {
+            setButtonsDisabled(false);
+            console.log('Data sent, button enabled'); // Add this line for debugging
         }
     };
 
-    const closeModal = () => {
-        setModalIsOpen(false);
-    };
+
 
     const getMaxSelections = () => {
         return layout === '1x1' ? 1 : layout === '2x2' ? 4 : 16;
     };
 
     return (
-        <div className="fot-type container">
+        <div className="container">
             <div className="title-container">
                 <h1>Camera Layout</h1>
             </div>
@@ -113,12 +111,12 @@ const App = () => {
                 </div>
                 {layout && (
                     <div className="camera-options-container">
-                        <h1 className="layout-container">Camera Options</h1>
+                        <h1>Camera Options</h1>
                         <div className="camera-options">
                             {cameraOptions.map((camera, index) => (
                                 <div
                                     key={index}
-                                    className={`camera-option ${selectedCameras.includes(camera) ? 'selected' : ''}`}
+                                    className={`camera-option ${selectedCameras.includes(index + 1) ? 'selected' : ''}`}
                                     onClick={() => handleCameraClick(camera)}
                                 >
                                     {camera}
@@ -129,22 +127,11 @@ const App = () => {
                 )}
                 {layout && (
                     <div className="button-container">
-                        <button className="clear-button" onClick={handleClear} disabled={buttonsDisabled||selectedCameras.length === 0}>Clear</button>
+                        <button className="clear-button" onClick={handleClear} disabled={buttonsDisabled || selectedCameras.length === 0}>Clear</button>
                         <button className="send-button" onClick={handleSend} disabled={buttonsDisabled || selectedCameras.length === 0}>Send</button>
                     </div>
                 )}
             </div>
-            <Modal
-                isOpen={modalIsOpen}
-                onRequestClose={closeModal}
-                contentLabel="Layout Selection Info"
-                className="modal"
-                overlayClassName="modal-overlay"
-            >
-                <h2>Layout Selection</h2>
-                <p>You can choose at most {getMaxSelections()} camera(s) for the {layout} layout.</p>
-                <button onClick={closeModal}>OK</button>
-            </Modal>
         </div>
     );
 };
