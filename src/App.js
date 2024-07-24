@@ -5,6 +5,8 @@ const App = () => {
     const [layout, setLayout] = useState('');
     const [selectedCameras, setSelectedCameras] = useState([]);
     const [buttonsDisabled, setButtonsDisabled] = useState(false);
+    const [socketReceive, setSocketReceive] = useState(null);
+    const [socketReady, setSocketReady] = useState(null);
 
     const cameraOptions = Array.from({ length: 20 }, (_, i) => `Camera ${i + 1}`);
 
@@ -13,6 +15,32 @@ const App = () => {
             alert(`You can choose at most ${getMaxSelections()} camera(s) for the ${layout} layout.`);
         }
     }, [layout]);
+
+    useEffect(() => {
+        // Connect to the WebSocket server for receiving data
+        const wsReceive = new WebSocket('ws://localhost:61000');
+        wsReceive.onopen = () => console.log('WebSocket connection established for receiving data.');
+        wsReceive.onmessage = (event) => console.log('Message from server:', event.data);
+        wsReceive.onerror = (error) => console.error('WebSocket error:', error);
+        setSocketReceive(wsReceive);
+
+        // Connect to the WebSocket server for receiving "ready" message
+        const wsReady = new WebSocket('ws://localhost:61001');
+        wsReady.onopen = () => console.log('WebSocket connection established for receiving "ready" message.');
+        wsReady.onmessage = (event) => {
+            if (event.data === 'ready') {
+                setButtonsDisabled(false);
+            }
+        };
+        wsReady.onerror = (error) => console.error('WebSocket error:', error);
+        setSocketReady(wsReady);
+
+        // Clean up on component unmount
+        return () => {
+            wsReceive.close();
+            wsReady.close();
+        };
+    }, []);
 
     const handleLayoutChange = (event) => {
         const selectedLayout = event.target.value;
@@ -36,33 +64,17 @@ const App = () => {
         setSelectedCameras([]);
     };
 
-    const handleSend = async () => {
-
-        console.log('Sending data...'); // Add this line for debugging
-        const layoutNumber = layout === '1x1' ? 1 : layout === '2x2' ? 4 : 16;
-        const data = [layoutNumber, ...selectedCameras].join(',') + '\n'; // Append newline character
-
-        try {
-            const response = await fetch('http://192.168.1.100:61000/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain',
-                },
-                body: data,
-            });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-        } catch (error) {
-            console.error('Fetch error:', error);
-        } finally {
-            setButtonsDisabled(false);
-            console.log('Data sent, button enabled'); // Add this line for debugging
+    const handleSend = () => {
+        setButtonsDisabled(true);
+        if (socketReceive) {
+            console.log('Sending data...');
+            const layoutNumber = layout === '1x1' ? 1 : layout === '2x2' ? 4 : 16;
+            const data = [layoutNumber, ...selectedCameras].join(',') ;
+            socketReceive.send(data);
+            console.log('Data sent successfully!');
+            setSelectedCameras([]); // Reset selected cameras after sending data
         }
     };
-
-
 
     const getMaxSelections = () => {
         return layout === '1x1' ? 1 : layout === '2x2' ? 4 : 16;
